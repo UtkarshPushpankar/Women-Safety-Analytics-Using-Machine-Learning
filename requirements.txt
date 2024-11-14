@@ -1,0 +1,8 @@
+streamlit
+torch==2.0.1
+opencv-python-headless==4.7.0.72
+ultralytics
+tensorflow==2.10.0
+numpy
+pillow
+matplotlib
