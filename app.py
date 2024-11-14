@@ -13,17 +13,16 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.applications.resnet50 import preprocess_input
 import os
-import urllib.request
+import gdown  # Import gdown for downloading Google Drive files
 
-# Direct download URLs for models
-YOLO_MODEL_URL = 'https://drive.google.com/file/d/11ma1o0hqVa38Ln-Ck2Q7mt9ZYSj08DKF/view?usp=drive_link'  
-RESNET_MODEL_URL = 'https://drive.google.com/file/d/1p6s01lHd-MWQzHYpTlTAcWWEPoRGlFkm/view?usp=sharing'  
+# Google Drive IDs for models
+YOLO_MODEL_ID = '11ma1o0hqVa38Ln-Ck2Q7mt9ZYSj08DKF'
+RESNET_MODEL_ID = '1p6s01lHd-MWQzHYpTlTAcWWEPoRGlFkm'
 
-# Download function to retrieve model files
-def download_file(url, destination):
-    if not os.path.exists(destination):
-        st.write(f"Downloading {os.path.basename(destination)}...")
-        urllib.request.urlretrieve(url, destination)
+# Function to download files from Google Drive using gdown
+def download_file_from_google_drive(file_id, destination):
+    url = f'https://drive.google.com/uc?id={file_id}'
+    gdown.download(url, destination, quiet=False)
 
 # Cache resource to load models only once
 @st.cache_resource
@@ -33,8 +32,12 @@ def load_models():
     resnet_path = 'GenderClassification.h5'
     
     # Download models if not present
-    download_file(YOLO_MODEL_URL, yolo_path)
-    download_file(RESNET_MODEL_URL, resnet_path)
+    if not os.path.exists(yolo_path):
+        st.write("Downloading YOLO model...")
+        download_file_from_google_drive(YOLO_MODEL_ID, yolo_path)
+    if not os.path.exists(resnet_path):
+        st.write("Downloading ResNet model...")
+        download_file_from_google_drive(RESNET_MODEL_ID, resnet_path)
 
     # Load models
     yolo_model = YOLO(yolo_path)
@@ -46,7 +49,7 @@ yolo_model, resnet_model = load_models()
 
 # Define preprocessing for ResNet model
 def preprocess_for_resnet(img):
-    img = img.resize((100, 200))  
+    img = img.resize((100, 200))  # ResNet50 expects 224x224 input
     img_array = img_to_array(img)
     img_array = np.expand_dims(img_array, axis=0)
     return preprocess_input(img_array)
