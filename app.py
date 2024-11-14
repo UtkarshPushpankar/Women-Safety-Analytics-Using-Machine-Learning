@@ -3,7 +3,7 @@ import streamlit as st
 # Set page configuration at the very beginning
 st.set_page_config(page_title="Women Safety Analytics", page_icon="🛡️", layout="wide")
 
-# Continue with the rest of your imports
+# Import necessary libraries
 import torch
 import cv2
 from PIL import Image
@@ -12,20 +12,41 @@ from ultralytics import YOLO
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.applications.resnet50 import preprocess_input
-from torchvision import transforms
+import os
+import urllib.request
 
-# Load models with caching
+# Direct download URLs for models
+YOLO_MODEL_URL = 'https://drive.google.com/file/d/11ma1o0hqVa38Ln-Ck2Q7mt9ZYSj08DKF/view?usp=drive_link'  
+RESNET_MODEL_URL = 'https://drive.google.com/file/d/1p6s01lHd-MWQzHYpTlTAcWWEPoRGlFkm/view?usp=sharing'  
+
+# Download function to retrieve model files
+def download_file(url, destination):
+    if not os.path.exists(destination):
+        st.write(f"Downloading {os.path.basename(destination)}...")
+        urllib.request.urlretrieve(url, destination)
+
+# Cache resource to load models only once
 @st.cache_resource
 def load_models():
-    yolo_model = YOLO('best.pt')
-    resnet_model = load_model('GenderClassification.h5')
+    # File paths for the models
+    yolo_path = 'best.pt'
+    resnet_path = 'GenderClassification.h5'
+    
+    # Download models if not present
+    download_file(YOLO_MODEL_URL, yolo_path)
+    download_file(RESNET_MODEL_URL, resnet_path)
+
+    # Load models
+    yolo_model = YOLO(yolo_path)
+    resnet_model = load_model(resnet_path)
     return yolo_model, resnet_model
 
+# Load YOLO and ResNet models
 yolo_model, resnet_model = load_models()
 
 # Define preprocessing for ResNet model
 def preprocess_for_resnet(img):
-    img = img.resize((100, 200))
+    img = img.resize((100, 200))  
     img_array = img_to_array(img)
     img_array = np.expand_dims(img_array, axis=0)
     return preprocess_input(img_array)
